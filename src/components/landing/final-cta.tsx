@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 
 export function FinalCTA() {
@@ -16,8 +18,8 @@ export function FinalCTA() {
               Join premium clinics using AI to qualify, score, and book
               customers automatically.
             </p>
-            <Button size="lg" className="mt-10 glow-indigo-lg">
-              Build Your AI Conversion Engine
+            <Button size="lg" className="mt-10 glow-indigo-lg" asChild>
+              <Link href="/signup">Build Your AI Conversion Engine</Link>
             </Button>
           </div>
         </div>

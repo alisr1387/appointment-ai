@@ -37,8 +37,8 @@ export function Hero() {
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="glow-indigo w-full sm:w-auto">
-              Create Your AI Conversion System
+            <Button size="lg" className="glow-indigo w-full sm:w-auto" asChild>
+              <Link href="/signup">Create Your AI Conversion System</Link>
             </Button>
             <Button
               variant="secondary"

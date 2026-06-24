@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -100,8 +101,9 @@ export function Pricing() {
                     plan.highlighted && "glow-indigo"
                   )}
                   variant={plan.highlighted ? "default" : "secondary"}
+                  asChild
                 >
-                  Get Started
+                  <Link href="/signup">Get Started</Link>
                 </Button>
 
                 <ul className="mt-8 space-y-3">

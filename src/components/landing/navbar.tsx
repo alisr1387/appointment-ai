@@ -56,11 +56,11 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" size="sm">
-            Sign in
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/login">Sign in</Link>
           </Button>
-          <Button size="sm" className="glow-indigo">
-            Get Started
+          <Button size="sm" className="glow-indigo" asChild>
+            <Link href="/signup">Get Started</Link>
           </Button>
         </div>
 
@@ -88,11 +88,15 @@ export function Navbar() {
               </Link>
             ))}
             <div className="mt-3 flex flex-col gap-2 border-t border-white/5 pt-4">
-              <Button variant="ghost" className="w-full justify-center">
-                Sign in
+              <Button variant="ghost" className="w-full justify-center" asChild>
+                <Link href="/login" onClick={() => setMobileOpen(false)}>
+                  Sign in
+                </Link>
               </Button>
-              <Button className="w-full justify-center glow-indigo">
-                Get Started
+              <Button className="w-full justify-center glow-indigo" asChild>
+                <Link href="/signup" onClick={() => setMobileOpen(false)}>
+                  Get Started
+                </Link>
               </Button>
             </div>
           </div>

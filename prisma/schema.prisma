@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceRole {
+  owner
+  member
+}
+
+enum BusinessCategory {
+  skin_beauty_clinic
+}
+
+enum ConversionGoalType {
+  book_appointment
+  get_leads
+  receive_orders
+  book_calls
+}
+
+enum LeadScore {
+  HOT
+  WARM
+  COLD
+}
+
+enum LeadStatus {
+  new
+  in_conversation
+  qualified
+  nurture
+  follow_up_sent
+  appointment_requested
+  appointment_booked
+  lost
+}
+
+enum AppointmentStatus {
+  requested
+  confirmed
+  cancelled
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+enum ActivityType {
+  visitor
+  conversation
+  lead_created
+  score_changed
+  appointment_requested
+  appointment_confirmed
+  follow_up_sent
+}
+
+model User {
+  id            String            @id @default(cuid())
+  name          String?
+  email         String            @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  memberships   WorkspaceMember[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Workspace {
+  id                 String            @id @default(cuid())
+  slug               String            @unique
+  name               String
+  category           BusinessCategory?
+  conversionGoal     ConversionGoalType @default(book_appointment)
+  onboardingStep     Int               @default(1)
+  onboardingComplete Boolean           @default(false)
+  logoUrl            String?
+  description        String?
+  location           String?
+  phone              String?
+  website            String?
+  socialLinks        Json?
+  workingHours       String?
+  policies           String?           @db.Text
+  faq                Json?
+  knowledgeNotes     String?           @db.Text
+  members            WorkspaceMember[]
+  services           Service[]
+  visitorSessions    VisitorSession[]
+  leads              Lead[]
+  appointments       Appointment[]
+  activities         Activity[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(owner)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+
+  @@unique([workspaceId, userId])
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  price       String?
+  duration    String?
+  sortOrder   Int       @default(0)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model VisitorSession {
+  id          String    @id @default(cuid())
+  workspaceId String
+  visitorId   String
+  leadId      String?   @unique
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  messages    Message[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([visitorId])
+}
+
+model Lead {
+  id              String          @id @default(cuid())
+  workspaceId     String
+  name            String?
+  phone           String?
+  email           String?
+  serviceInterest String?
+  score           LeadScore?
+  scoreNumeric    Int?
+  scoreReasoning  String?         @db.Text
+  status          LeadStatus      @default(new)
+  workspace       Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  visitorSession  VisitorSession?
+  messages        Message[]
+  appointment     Appointment?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([score])
+}
+
+model Message {
+  id               String         @id @default(cuid())
+  workspaceId      String
+  visitorSessionId String
+  leadId           String?
+  role             MessageRole
+  content          String         @db.Text
+  visitorSession   VisitorSession @relation(fields: [visitorSessionId], references: [id], onDelete: Cascade)
+  lead             Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  createdAt        DateTime       @default(now())
+
+  @@index([visitorSessionId])
+  @@index([leadId])
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  workspaceId String
+  leadId      String            @unique
+  preferredAt DateTime?
+  preferredAtText String?
+  confirmedAt DateTime?
+  status      AppointmentStatus @default(requested)
+  notes       String?
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lead        Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  workspaceId String
+  type        ActivityType
+  title       String
+  metadata    Json?
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+
+  @@index([workspaceId])
+  @@index([createdAt])
+}
